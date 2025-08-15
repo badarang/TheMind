@@ -228,14 +228,60 @@ const BackButton = styled(motion.button)`
   }
 `;
 
+const NoticeContainer = styled.div`
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 2px solid #ffc107;
+  border-radius: 15px;
+  padding: 20px;
+  margin: 20px 0;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
+`;
+
+const NoticeIcon = styled.div`
+  font-size: 2rem;
+  margin-bottom: 10px;
+`;
+
+const NoticeText = styled.div`
+  color: #856404;
+  line-height: 1.6;
+  margin-bottom: 15px;
+  
+  strong {
+    color: #664d03;
+  }
+`;
+
+const NoticeButton = styled.button`
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 193, 7, 0.6);
+  }
+`;
+
 const MainMenu = ({ sendMessage }) => {
-  const { dispatch, roomCode, players } = useGame();
-  const [inputName, setInputName] = useState('');
+  const { playerName, roomCode, players, dispatch } = useGame();
+  const [inputName, setInputName] = useState(playerName || '');
   const [showJoinInput, setShowJoinInput] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [nameError, setNameError] = useState(false);
   const [joinCodeError, setJoinCodeError] = useState(false);
-
+  
+  // GitHub Pages 환경 확인
+  const isGitHubPages = window.location.hostname.includes('github.io');
+  
   // 방 코드와 플레이어가 있으면 자동으로 로비로 이동
   useEffect(() => {
     if (roomCode && players && players.length > 0) {
@@ -342,6 +388,21 @@ const MainMenu = ({ sendMessage }) => {
         마음으로 소통하는 협동 카드 게임
       </Subtitle>
 
+      {/* GitHub Pages 환경 안내 */}
+      {isGitHubPages && (
+        <NoticeContainer>
+          <NoticeIcon>⚠️</NoticeIcon>
+          <NoticeText>
+            <strong>GitHub Pages 환경</strong><br />
+            멀티플레이어 기능을 사용하려면 WebSocket 서버가 필요합니다.<br />
+            로컬에서 서버를 실행하거나 무료 WebSocket 서비스를 사용해주세요.
+          </NoticeText>
+          <NoticeButton onClick={() => window.open('https://github.com/badarang/TheMind#readme', '_blank')}>
+            자세히 보기
+          </NoticeButton>
+        </NoticeContainer>
+      )}
+      
       <MenuContainer
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}

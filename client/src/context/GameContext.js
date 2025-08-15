@@ -168,52 +168,79 @@ export const GameProvider = ({ children }) => {
     if (isConnectingRef.current || wsRef.current || hasConnectedRef.current) {
       return;
     }
-
+    
     isConnectingRef.current = true;
     
+    // 환경별 WebSocket URL 설정
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isGitHubPages = window.location.hostname.includes('github.io');
+    
+    let wsUrl;
+    if (isLocalhost) {
+      wsUrl = 'ws://localhost:3001';
+    } else if (isGitHubPages) {
+      // GitHub Pages에서는 무료 WebSocket 서비스 사용 (예: glitch.com)
+      // 또는 사용자에게 로컬 서버 실행 안내
+      wsUrl = null;
+    } else {
+      // 프로덕션 환경
+      wsUrl = 'wss://your-websocket-server.com';
+    }
+    
+    if (!wsUrl) {
+      dispatch({
+        type: 'ADD_MESSAGE',
+        payload: { 
+          text: 'GitHub Pages에서는 WebSocket 서버가 필요합니다. 로컬에서 서버를 실행하거나 무료 WebSocket 서비스를 사용해주세요.', 
+          type: 'warning' 
+        }
+      });
+      isConnectingRef.current = false;
+      return;
+    }
+    
     try {
-      const websocket = new WebSocket('ws://localhost:3001');
+      const websocket = new WebSocket(wsUrl);
       
       websocket.onopen = () => {
         dispatch({ type: 'SET_WEBSOCKET', payload: websocket });
         isConnectingRef.current = false;
         hasConnectedRef.current = true;
         reconnectAttemptsRef.current = 0;
-        
-        dispatch({
-          type: 'ADD_MESSAGE',
-          payload: { text: '서버에 연결되었습니다.', type: 'success' }
-        });
       };
-
+      
       websocket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
           handleWebSocketMessage(data);
         } catch (error) {
-          console.error('WebSocket 메시지 파싱 오류:', error);
+          console.error('메시지 파싱 오류:', error);
         }
       };
-
+      
       websocket.onclose = (event) => {
         if (event.code !== 1000 && event.code !== 1001) {
           if (reconnectAttemptsRef.current < maxReconnectAttempts) {
             reconnectAttemptsRef.current++;
-            const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 10000);
+            const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current - 1), 30000);
             
             reconnectTimeoutRef.current = setTimeout(() => {
               connect();
             }, delay);
           } else {
-            hasConnectedRef.current = false;
             dispatch({
               type: 'ADD_MESSAGE',
-              payload: { text: '서버 연결에 실패했습니다. 페이지를 새로고침해주세요.', type: 'error' }
+              payload: { text: 'WebSocket 재연결에 실패했습니다. 페이지를 새로고침해주세요.', type: 'error' }
             });
           }
         }
+        
+        wsRef.current = null;
+        dispatch({ type: 'SET_WEBSOCKET', payload: null });
+        isConnectingRef.current = false;
+        hasConnectedRef.current = false;
       };
-
+      
       websocket.onerror = (error) => {
         dispatch({
           type: 'ADD_MESSAGE',
@@ -224,7 +251,7 @@ export const GameProvider = ({ children }) => {
       console.error('WebSocket 연결 오류:', error);
       isConnectingRef.current = false;
     }
-  }, []);
+  }, [handleWebSocketMessage]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
