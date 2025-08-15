@@ -2,7 +2,7 @@
   "name": "themind",
   "version": "1.0.0",
   "description": "The Mind - WebSocket Multiplayer Board Game",
-  "homepage": "https://[YOUR_USERNAME].github.io/TheMind",
+  "homepage": "https://badarang.github.io/TheMind",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd server && npm run dev",

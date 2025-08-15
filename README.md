@@ -36,7 +36,7 @@
 ## 📱 배포
 
 ### GitHub Pages
-- **URL**: https://[YOUR_USERNAME].github.io/TheMind
+- **URL**: https://badarang.github.io/TheMind
 - **자동 배포**: main 브랜치에 push 시 자동 배포
 
 ### 로컬 개발
