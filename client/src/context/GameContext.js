@@ -344,19 +344,18 @@ export const GameProvider = ({ children }) => {
     if (isLocalhost) {
       wsUrl = 'ws://localhost:3001';
     } else if (isGitHubPages) {
-      // GitHub Pages에서는 무료 WebSocket 서비스 사용 (예: glitch.com)
-      // 또는 사용자에게 로컬 서버 실행 안내
-      wsUrl = null;
+      // AWS WebSocket API URL (실제 배포된 URL)
+      wsUrl = 'wss://v72h226uf7.execute-api.ap-southeast-2.amazonaws.com/production';
     } else {
       // 프로덕션 환경
-      wsUrl = 'wss://your-websocket-server.com';
+      wsUrl = 'wss://v72h226uf7.execute-api.ap-southeast-2.amazonaws.com/production';
     }
     
-    if (!wsUrl) {
+    if (!wsUrl || wsUrl.includes('v72h226uf7')) {
       dispatch({
         type: 'ADD_MESSAGE',
         payload: { 
-          text: 'GitHub Pages에서는 WebSocket 서버가 필요합니다. 로컬에서 서버를 실행하거나 무료 WebSocket 서비스를 사용해주세요.', 
+          text: 'AWS WebSocket API URL을 올바르게 설정해주세요.', 
           type: 'warning' 
         }
       });

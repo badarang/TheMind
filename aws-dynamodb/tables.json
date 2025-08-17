@@ -1,0 +1,72 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The Mind Game DynamoDB Tables",
+  
+  "Resources": {
+    "TheMindConnectionsTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "TheMind-Connections",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "connectionId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "connectionId",
+            "KeyType": "HASH"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "TimeToLiveSpecification": {
+          "AttributeName": "ttl",
+          "Enabled": true
+        }
+      }
+    },
+    
+    "TheMindGamesTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "TheMind-Games",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "roomCode",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "roomCode",
+            "KeyType": "HASH"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "TimeToLiveSpecification": {
+          "AttributeName": "ttl",
+          "Enabled": true
+        }
+      }
+    }
+  },
+  
+  "Outputs": {
+    "ConnectionsTableName": {
+      "Description": "Name of the connections table",
+      "Value": { "Ref": "TheMindConnectionsTable" },
+      "Export": {
+        "Name": "TheMind-Connections-Table"
+      }
+    },
+    
+    "GamesTableName": {
+      "Description": "Name of the games table",
+      "Value": { "Ref": "TheMindGamesTable" },
+      "Export": {
+        "Name": "TheMind-Games-Table"
+      }
+    }
+  }
+} 
