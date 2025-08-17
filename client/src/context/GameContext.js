@@ -167,6 +167,11 @@ export const GameProvider = ({ children }) => {
   const handleWebSocketMessage = useCallback((data) => {
     
     switch (data.type) {
+      case 'connection_established':
+        console.log('Connection ID 설정:', data.connectionId);
+        dispatch({ type: 'SET_PLAYER_ID', payload: data.connectionId });
+        break;
+        
       case 'room_created':
         dispatch({ type: 'SET_ROOM_CODE', payload: data.data.roomCode });
         dispatch({ type: 'SET_PLAYER_ID', payload: data.data.playerId });
@@ -340,22 +345,32 @@ export const GameProvider = ({ children }) => {
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const isGitHubPages = window.location.hostname.includes('github.io');
     
+    console.log('환경 감지:', {
+      hostname: window.location.hostname,
+      isLocalhost,
+      isGitHubPages,
+      href: window.location.href
+    });
+    
     let wsUrl;
     if (isLocalhost) {
       wsUrl = 'ws://localhost:3001';
+      console.log('로컬 환경 WebSocket URL:', wsUrl);
     } else if (isGitHubPages) {
-      // AWS WebSocket API URL (실제 배포된 URL)
-      wsUrl = 'wss://v72h226uf7.execute-api.ap-southeast-2.amazonaws.com/production';
+      // AWS WebSocket API URL (production 스테이지)
+      wsUrl = 'wss://rrrjbbyoak.execute-api.ap-southeast-2.amazonaws.com/production';
+      console.log('GitHub Pages 환경 WebSocket URL:', wsUrl);
     } else {
       // 프로덕션 환경
-      wsUrl = 'wss://v72h226uf7.execute-api.ap-southeast-2.amazonaws.com/production';
+      wsUrl = 'wss://rrrjbbyoak.execute-api.ap-southeast-2.amazonaws.com/production';
+      console.log('프로덕션 환경 WebSocket URL:', wsUrl);
     }
     
-    if (!wsUrl || wsUrl.includes('v72h226uf7')) {
+    if (!wsUrl) {
       dispatch({
         type: 'ADD_MESSAGE',
         payload: { 
-          text: 'AWS WebSocket API URL을 올바르게 설정해주세요.', 
+          text: 'WebSocket URL이 설정되지 않았습니다.', 
           type: 'warning' 
         }
       });
@@ -364,13 +379,20 @@ export const GameProvider = ({ children }) => {
     }
     
     try {
+      console.log('WebSocket 연결 시도:', wsUrl);
       const websocket = new WebSocket(wsUrl);
       
       websocket.onopen = () => {
+        console.log('WebSocket 연결 성공!');
         dispatch({ type: 'SET_WEBSOCKET', payload: websocket });
         isConnectingRef.current = false;
         hasConnectedRef.current = true;
         reconnectAttemptsRef.current = 0;
+        
+        // 연결 성공 후 connectionId 요청
+        websocket.send(JSON.stringify({
+          action: 'get_connection_id'
+        }));
       };
       
       websocket.onmessage = (event) => {
@@ -434,11 +456,17 @@ export const GameProvider = ({ children }) => {
 
   const sendMessage = useCallback((message) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(message));
+      // connectionId가 있으면 포함
+      const messageWithConnectionId = {
+        ...message,
+        connectionId: state.playerId || null
+      };
+      console.log('메시지 전송:', messageWithConnectionId);
+      wsRef.current.send(JSON.stringify(messageWithConnectionId));
     } else {
       console.error('WebSocket이 연결되지 않았습니다.');
     }
-  }, []);
+  }, [state.playerId]);
 
   useEffect(() => {
     connect();
